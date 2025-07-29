@@ -87,7 +87,7 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 		if targetPath == "/organization/user" && r.Method == http.MethodPost {
 			log.Println("Handling POST request to /organization/user")
 			// 这里可以添加特定的处理逻辑
-			if err := syncUser(r, body, targetPath); err != nil {
+			if err := syncUser(r, body); err != nil {
 				log.Printf("Error syncing user: %v", err)
 				http.Error(w, "Failed to sync user", http.StatusInternalServerError)
 				return

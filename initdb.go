@@ -18,6 +18,8 @@ const (
 )
 
 // JosApp 对应数据库表 jos_app
+// 新增 AppClientID 字段
+// ALTER TABLE jos_app ADD COLUMN app_client_id BIGINT COMMENT '客户端ID';
 type JosApp struct {
 	ID                    uint64    `gorm:"column:id;primaryKey;autoIncrement"`
 	AppID                 uint64    `gorm:"column:app_id;not null"`                           // 应用ID
@@ -31,6 +33,7 @@ type JosApp struct {
 	PublishAddressOutside string    `gorm:"column:publish_address_outside;type:varchar(255)"` // 外部发布地址
 	Status                string    `gorm:"column:status;type:varchar(255)"`                  // 状态
 	ClientID              uint64    `gorm:"column:client_id"`                                 // 客户端ID
+	AppClientID           uint64    `gorm:"column:app_client_id"`                             // 应用客户端ID
 	CreateDate            time.Time `gorm:"column:create_date;default:CURRENT_TIMESTAMP"`     // 创建时间（自动设置）
 	ModifyDate            time.Time `gorm:"column:modify_date;autoUpdateTime"`                // 修改时间（自动更新）
 }
