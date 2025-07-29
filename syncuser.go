@@ -67,7 +67,7 @@ func syncUser(r *http.Request, path string) error {
 func getAddressesByAppID(appID uint64) (string, string, error) {
 	var app JosApp
 	result := DB.Select("publish_address_inside", "publish_address_outside").
-		Where("app_id = ?", appID).
+		Where("id = ?", appID).
 		First(&app)
 
 	if result.Error != nil {
