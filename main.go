@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"log"
 	"net/http"
@@ -74,11 +75,19 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 			return
 		}
 
+		// 读取请求体
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewBuffer(body)) // 重置请求体
+
 		// 如果targetPath == 'organization/user', 并且method是POST
 		if targetPath == "/organization/user" && r.Method == http.MethodPost {
 			log.Println("Handling POST request to /organization/user")
 			// 这里可以添加特定的处理逻辑
-			if err := syncUser(r, targetPath); err != nil {
+			if err := syncUser(r, body, targetPath); err != nil {
 				log.Printf("Error syncing user: %v", err)
 				http.Error(w, "Failed to sync user", http.StatusInternalServerError)
 				return
@@ -111,7 +120,8 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 // rewritePath removes the "/prod" prefix if present.
 func rewritePath(path string) string {
 	if after, ok := strings.CutPrefix(path, "/prod"); ok {
-		newPath := "/" + after
+		// newPath := "/" + after
+		newPath := after
 		log.Printf("Rewriting path: %s -> %s", path, newPath)
 		return newPath
 	}

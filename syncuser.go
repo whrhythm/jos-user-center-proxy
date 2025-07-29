@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,16 +23,11 @@ type UserRequest struct {
 	Password        string   `json:"password"`
 }
 
-func syncUser(r *http.Request, path string) error {
+func syncUser(r *http.Request, body []byte, path string) error {
 
 	// 检查Content-Type
 	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		return fmt.Errorf("Content-Type must be application/json")
-	}
-	// 读取请求体
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
 	}
 
 	// 解析JSON到结构体
