@@ -75,23 +75,15 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 			return
 		}
 
-		// 读取请求体
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 			return
 		}
-		r.Body = io.NopCloser(bytes.NewBuffer(body)) // 重置请求体
+		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-		// 如果targetPath == 'organization/user', 并且method是POST
-		if targetPath == "/organization/user" && r.Method == http.MethodPost {
-			log.Println("Handling POST request to /organization/user")
-			// 这里可以添加特定的处理逻辑
-			if err := syncUser(r, body); err != nil {
-				log.Printf("Error syncing user: %v", err)
-				http.Error(w, "Failed to sync user", http.StatusInternalServerError)
-				return
-			}
+		if handled := handleSpecialCases(w, r, targetPath, body); handled {
+			return
 		}
 
 		req, err := http.NewRequest(r.Method, targetURL, r.Body)
@@ -114,6 +106,29 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 		log.Printf("Forwarded to %s in %v", targetURL, time.Since(start))
 
 		copyResponse(w, resp)
+	}
+}
+
+// handleSpecialCases processes special-case endpoints and returns true if the request was handled.
+func handleSpecialCases(w http.ResponseWriter, r *http.Request, targetPath string, body []byte) bool {
+	switch {
+	case targetPath == "/organization/user" && r.Method == http.MethodPost:
+		log.Println("Handling POST request to /organization/user")
+		if err := syncUser(r, body); err != nil {
+			log.Printf("Error syncing user: %v", err)
+			http.Error(w, "Failed to sync user", http.StatusInternalServerError)
+			return true
+		}
+		return false
+	case targetPath == "/user/app/grant" && r.Method == http.MethodPost:
+		if err := grantUsers(r, body); err != nil {
+			log.Printf("Error granting users: %v", err)
+			http.Error(w, "Failed to grant users", http.StatusInternalServerError)
+			return true
+		}
+		return false
+	default:
+		return false
 	}
 }
 

@@ -71,7 +71,7 @@ func syncUser(r *http.Request, body []byte) error {
 			}
 
 			// 处理同步协议
-			err = handleSync(req, id, publishAddressInside)
+			err = handleSync(id, req.UserName, req.Name, req.Mobile, req.Email, publishAddressInside)
 			if err != nil {
 				return fmt.Errorf("failed to handle sync for id %d: %w", id, err)
 			}
@@ -99,13 +99,13 @@ func getAddressesByAppID(appID uint64) (string, error) {
 	return app.PublishAddressInside, nil
 }
 
-func handleSync(userRequest UserRequest, id uint64, appAuthEndpoint string) error {
+func handleSync(id uint64, userName, name, mobile, email, appAuthEndpoint string) error {
 	// 1. 准备请求数据
 	user := UserSyncRequest{
-		UserName: userRequest.UserName,
-		Name:     userRequest.Name,
-		Phone:    userRequest.Mobile,
-		Email:    userRequest.Email,
+		UserName: userName,
+		Name:     name,
+		Phone:    mobile,
+		Email:    email,
 		Sex:      0, // 默认性别为0
 	}
 
@@ -159,7 +159,7 @@ func handleSync(userRequest UserRequest, id uint64, appAuthEndpoint string) erro
 		if err := DB.Save(&app).Error; err != nil {
 			return fmt.Errorf("failed to update app with client_id: %w", err)
 		}
-		fmt.Printf("用户同步成功: %s (ClientID: %s)\n", userRequest.UserName, response.ClientID)
+		fmt.Printf("用户同步成功: %s (ClientID: %s)\n", userName, response.ClientID)
 	} else {
 		fmt.Printf("请求失败: %s (错误码: %d)\n", response.Message, response.Code)
 	}
