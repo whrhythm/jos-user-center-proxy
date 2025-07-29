@@ -45,7 +45,10 @@ type Response struct {
 const contentTypeJSON = "application/json"
 
 func syncUser(r *http.Request, body []byte) error {
-
+	// 清空表中所有的app_client_id
+	if err := DB.Model(&JosApp{}).Update("app_client_id", 0).Error; err != nil {
+		return fmt.Errorf("failed to reset app_client_id: %w", err)
+	}
 	// 检查Content-Type
 	if !strings.Contains(r.Header.Get("Content-Type"), contentTypeJSON) {
 		return fmt.Errorf("Content-Type must be %s", contentTypeJSON)
