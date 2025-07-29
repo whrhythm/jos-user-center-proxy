@@ -7,7 +7,33 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
+
+var DB *gorm.DB
+
+func init() {
+	// 初始化数据库
+	var err error
+	DB, err = InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	// 测试连接
+	if err := testConnection(); err != nil {
+		log.Fatalf("Database connection test failed: %v", err)
+	}
+}
+
+func testConnection() error {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Ping()
+}
 
 func main() {
 	targetBaseURL := "http://join-user-center:8084" // 目标服务地址
@@ -46,6 +72,17 @@ func proxyHandler(targetBaseURL string, client *http.Client) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "Invalid target path", http.StatusBadRequest)
 			return
+		}
+
+		// 如果targetPath == 'organization/user', 并且method是POST
+		if targetPath == "/organization/user" && r.Method == http.MethodPost {
+			log.Println("Handling POST request to /organization/user")
+			// 这里可以添加特定的处理逻辑
+			if err := syncUser(r, targetPath); err != nil {
+				log.Printf("Error syncing user: %v", err)
+				http.Error(w, "Failed to sync user", http.StatusInternalServerError)
+				return
+			}
 		}
 
 		req, err := http.NewRequest(r.Method, targetURL, r.Body)
