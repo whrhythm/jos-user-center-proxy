@@ -31,10 +31,10 @@ type Database struct {
 var DB Database
 
 func InitDB(path string) error {
-	// err := initJosDB()
-	// if err != nil {
-	// 	return fmt.Errorf("failed to initialize MySQL database: %w", err)
-	// }
+	err := initJosDB()
+	if err != nil {
+		return fmt.Errorf("failed to initialize MySQL database: %w", err)
+	}
 
 	return initSqliteDB(path)
 }
